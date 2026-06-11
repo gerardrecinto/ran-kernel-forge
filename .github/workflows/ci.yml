@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate profiles and scripts
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check DU profile required options
+        run: |
+          grep -q 'CONFIG_PREEMPT_RT=y'  profiles/du-profile.config
+          grep -q 'CONFIG_NO_HZ_FULL=y'  profiles/du-profile.config
+          grep -q 'CONFIG_VFIO_PCI=y'    profiles/du-profile.config
+          grep -q 'CONFIG_HUGETLBFS=y'   profiles/du-profile.config
+          echo "DU profile OK"
+
+      - name: Check RU profile required options
+        run: |
+          grep -q 'CONFIG_PREEMPT_RT=y'      profiles/ru-profile.config
+          grep -q 'CONFIG_PTP_1588_CLOCK=y'  profiles/ru-profile.config
+          grep -q 'CONFIG_NET_SCH_ETF=y'     profiles/ru-profile.config
+          grep -q 'CONFIG_NET_SCH_TAPRIO=y'  profiles/ru-profile.config
+          echo "RU profile OK"
+
+      - name: Lint shell scripts
+        run: |
+          sudo apt-get install -y shellcheck
+          shellcheck scripts/*.sh
+
+      - name: Python lint
+        run: |
+          pip install ruff
+          ruff check tests/
+
+      - name: Run latency check (quick — no RT kernel in CI)
+        run: python3 tests/latency_check.py --quick --json
+
+  build-du:
+    name: Build DU container
+    runs-on: ubuntu-22.04
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build DU image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: containers/du/Dockerfile
+          push: false
+          tags: ran-kernel-forge/du:ci
+
+  build-cu:
+    name: Build CU container
+    runs-on: ubuntu-22.04
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build CU image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: containers/cu/Dockerfile
+          push: false
+          tags: ran-kernel-forge/cu:ci
