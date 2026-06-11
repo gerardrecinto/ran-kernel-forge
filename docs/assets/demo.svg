@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 320" width="740" height="320">
+  <defs>
+    <style>
+      text { font-family: 'Menlo', 'Courier New', monospace; font-size: 13px; }
+      .bg  { fill: #0d1117; }
+      .bar { fill: #161b22; }
+      .d1  { fill: #ff5f57; }
+      .d2  { fill: #febc2e; }
+      .d3  { fill: #28c840; }
+      .ttl { fill: #8b949e; font-size: 11px; }
+      .pr  { fill: #58a6ff; }
+      .cm  { fill: #e6edf3; }
+      .ok  { fill: #3fb950; font-weight: bold; }
+      .dm  { fill: #8b949e; }
+
+      .a0  { opacity:0; animation: ap .05s  .3s forwards; }
+      .a1  { opacity:0; animation: ap .05s  .9s forwards; }
+      .a2  { opacity:0; animation: ap .05s 1.6s forwards; }
+      .a3  { opacity:0; animation: ap .05s 2.3s forwards; }
+      .a4  { opacity:0; animation: ap .05s 3.0s forwards; }
+      .a5  { opacity:0; animation: ap .05s 3.7s forwards; }
+      .a6  { opacity:0; animation: ap .05s 4.4s forwards; }
+      .a7  { opacity:0; animation: ap .05s 5.1s forwards; }
+      .a8  { opacity:0; animation: ap .05s 5.9s forwards; }
+      .a9  { opacity:0; animation: ap .05s 6.6s forwards; }
+      .a10 { opacity:0; animation: ap .05s 7.3s forwards; }
+      .a11 { opacity:0; animation: ap .05s 8.0s forwards; }
+
+      .cur { animation: bl 1s step-end infinite; }
+      @keyframes ap { to { opacity:1; } }
+      @keyframes bl { 50% { opacity:0; } }
+    </style>
+  </defs>
+
+  <rect width="740" height="320" rx="10" class="bg"/>
+  <rect width="740" height="36" rx="10" class="bar"/>
+  <rect y="20" width="740" height="16" class="bar"/>
+  <circle cx="22" cy="18" r="6" class="d1"/>
+  <circle cx="44" cy="18" r="6" class="d2"/>
+  <circle cx="66" cy="18" r="6" class="d3"/>
+  <text x="370" y="22" text-anchor="middle" class="ttl">ran-kernel-forge — DU preflight check</text>
+
+  <text y="62" class="cm a0">
+    <tspan x="18" class="pr">$</tspan>
+    <tspan> docker run --privileged --pid=host \</tspan>
+  </text>
+  <text x="28" y="79" class="cm a1">    ghcr.io/gerardrecinto/ran-kernel-forge-du:latest --quick</text>
+
+  <text y="106" class="a2">
+    <tspan x="18" class="ok">[PASS]</tspan>
+    <tspan class="cm">  PREEMPT_RT kernel active</tspan>
+  </text>
+  <text y="124" class="a3">
+    <tspan x="18" class="ok">[PASS]</tspan>
+    <tspan class="cm">  CPU isolation (isolcpus/rcu_nocbs)</tspan>
+  </text>
+  <text y="142" class="a4">
+    <tspan x="18" class="ok">[PASS]</tspan>
+    <tspan class="cm">  Hugepages configured</tspan>
+  </text>
+  <text y="160" class="a5">
+    <tspan x="18" class="ok">[PASS]</tspan>
+    <tspan class="cm">  irqbalance disabled</tspan>
+  </text>
+  <text y="178" class="a6">
+    <tspan x="18" class="ok">[PASS]</tspan>
+    <tspan class="cm">  CPU governor = performance</tspan>
+  </text>
+
+  <text x="18" y="204" class="ok a7">5/5 checks passed</text>
+
+  <line x1="18" y1="218" x2="722" y2="218" stroke="#30363d" stroke-width="1" class="a7"/>
+
+  <text y="242" class="cm a8">
+    <tspan x="18" class="pr">$</tspan>
+    <tspan> python3 tests/latency_check.py --quick --json | jq '.passed,.total'</tspan>
+  </text>
+  <text x="18" y="262" class="ok a9">5</text>
+  <text x="18" y="278" class="ok a10">5</text>
+
+  <text y="302" class="a11">
+    <tspan x="18" class="pr">$</tspan>
+    <tspan class="cm cur">  _</tspan>
+  </text>
+</svg>
