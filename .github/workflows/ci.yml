@@ -51,8 +51,8 @@ jobs:
           ruff check tests/
           pytest tests/test_checks.py -v
 
-      - name: Run latency check (quick — no RT kernel in CI)
-        run: python3 tests/latency_check.py --quick --json
+      - name: Run latency check (quick — checks expected to fail on non-RT runner)
+        run: python3 tests/latency_check.py --quick --json | python3 -m json.tool
 
   build:
     name: Build ${{ matrix.profile }} container
