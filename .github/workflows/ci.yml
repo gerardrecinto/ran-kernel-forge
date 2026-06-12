@@ -21,6 +21,11 @@ jobs:
           grep -q 'CONFIG_HUGETLBFS=y'   profiles/du-profile.config
           echo "DU profile OK"
 
+      - name: Check CU profile required options
+        run: |
+          grep -q 'CONFIG_NET_SCHED=y'   profiles/cu-profile.config
+          echo "CU profile OK"
+
       - name: Check RU profile required options
         run: |
           grep -q 'CONFIG_PREEMPT_RT=y'      profiles/ru-profile.config
@@ -34,40 +39,50 @@ jobs:
           sudo apt-get install -y shellcheck
           shellcheck scripts/*.sh
 
-      - name: Python lint
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Lint and unit tests
         run: |
-          pip install ruff
+          pip install ruff pytest
           ruff check tests/
+          pytest tests/test_checks.py -v
 
       - name: Run latency check (quick — no RT kernel in CI)
         run: python3 tests/latency_check.py --quick --json
 
-  build-du:
-    name: Build DU container
+  build:
+    name: Build ${{ matrix.profile }} container
     runs-on: ubuntu-22.04
     needs: validate
+    strategy:
+      matrix:
+        profile: [du, cu, ru]
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - name: Build DU image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: containers/du/Dockerfile
-          push: false
-          tags: ran-kernel-forge/du:ci
 
-  build-cu:
-    name: Build CU container
-    runs-on: ubuntu-22.04
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Build CU image
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache-${{ matrix.profile }}
+          key: buildx-${{ matrix.profile }}-${{ github.sha }}
+          restore-keys: buildx-${{ matrix.profile }}-
+
+      - name: Build ${{ matrix.profile }} image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: containers/cu/Dockerfile
+          file: containers/${{ matrix.profile }}/Dockerfile
           push: false
-          tags: ran-kernel-forge/cu:ci
+          tags: ran-kernel-forge/${{ matrix.profile }}:ci
+          cache-from: type=local,src=/tmp/.buildx-cache-${{ matrix.profile }}
+          cache-to: type=local,dest=/tmp/.buildx-cache-${{ matrix.profile }}-new,mode=max
+
+      - name: Rotate cache
+        run: |
+          rm -rf /tmp/.buildx-cache-${{ matrix.profile }}
+          mv /tmp/.buildx-cache-${{ matrix.profile }}-new /tmp/.buildx-cache-${{ matrix.profile }}
