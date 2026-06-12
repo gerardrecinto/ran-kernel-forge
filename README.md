@@ -2,14 +2,14 @@
 
 ![CI](https://github.com/gerardrecinto/ran-kernel-forge/actions/workflows/ci.yml/badge.svg)
 ![Release](https://github.com/gerardrecinto/ran-kernel-forge/actions/workflows/release.yml/badge.svg)
-![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-lightgrey?logo=linux&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Linux%20x86__64%20%7C%20arm64-lightgrey?logo=linux&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ![ran-kernel-forge logo](docs/assets/logo.svg)
 
 > From bare metal to RAN-ready in under 5 minutes.
 
-Linux kernel profiles and validation containers for 5G/6G RAN workloads. Covers Distributed Unit (DU), Central Unit (CU), and Radio Unit (RU) deployment on COTS x86\_64. Targets sub-1ms scheduling jitter for L1/L2 real-time processing and eCPRI fronthaul synchronization.
+Linux kernel profiles and validation containers for 5G/6G RAN workloads. Covers Distributed Unit (DU), Central Unit (CU), and Radio Unit (RU) deployment on COTS x86\_64 and ARM64. Targets sub-1ms scheduling jitter for L1/L2 real-time processing and eCPRI fronthaul synchronization.
 
 ---
 
@@ -29,6 +29,8 @@ The profiles are reference implementations for O-RAN.WG4 fronthaul scenarios and
 ---
 
 ## What it looks like
+
+![Demo](docs/assets/demo.svg)
 
 Quick mode (config checks, no hardware needed — runs in CI):
 
@@ -101,7 +103,7 @@ python3 tests/latency_check.py --quick --json | jq '.passed, .total'
 
 ```text
 profiles/
-  du-profile.config    CU-profile.config    ru-profile.config
+  du-profile.config    cu-profile.config    ru-profile.config
          |                    |                    |
          v                    v                    v
   scripts/apply-profile.sh  (merge into kernel .config)
@@ -110,7 +112,7 @@ profiles/
   Kernel build with RT patches
          |
          v
-  Deployed node (COTS x86_64)
+  Deployed node (COTS x86_64 or ARM64)
          |
          v
   scripts/tune-hugepages.sh
@@ -125,7 +127,7 @@ profiles/
   Fail: block deployment, page on-call
 ```
 
-Containers (`containers/du/`, `containers/cu/`) ship the tuning scripts and validator pre-installed. Run with `--privileged --pid=host` for full kernel visibility.
+Containers (`containers/du/`, `containers/cu/`, `containers/ru/`) ship the tuning scripts and validator pre-installed. Run with `--privileged --pid=host` for full kernel visibility.
 
 ---
 
@@ -141,6 +143,10 @@ docker run --privileged --pid=host \
 # CU node pre-flight
 docker run --privileged --pid=host \
   ghcr.io/gerardrecinto/ran-kernel-forge-cu:latest
+
+# RU node pre-flight (PTP/TSN fronthaul)
+docker run --privileged --pid=host \
+  ghcr.io/gerardrecinto/ran-kernel-forge-ru:latest
 ```
 
 ### Clone and run locally
@@ -187,7 +193,10 @@ isolcpus=2-N rcu_nocbs=2-N nohz_full=2-N intel_pstate=disable
 ```bash
 docker pull ghcr.io/gerardrecinto/ran-kernel-forge-du:latest
 docker pull ghcr.io/gerardrecinto/ran-kernel-forge-cu:latest
+docker pull ghcr.io/gerardrecinto/ran-kernel-forge-ru:latest
 ```
+
+Images are published for `linux/amd64` and `linux/arm64`. Build provenance and SBOM attestations are embedded in each image via OCI referrers.
 
 ---
 
@@ -201,17 +210,19 @@ ran-kernel-forge/
 │   └── ru-profile.config     # RU: PREEMPT_RT, PTP/1588, TSN, TAPRIO
 ├── containers/
 │   ├── du/Dockerfile
-│   └── cu/Dockerfile
+│   ├── cu/Dockerfile
+│   └── ru/Dockerfile
 ├── scripts/
 │   ├── tune-hugepages.sh
 │   ├── tune-irq-affinity.sh
 │   ├── tune-cpu-isolation.sh
 │   └── apply-profile.sh
 ├── tests/
-│   └── latency_check.py      # Kernel readiness checker with cyclictest integration
+│   ├── latency_check.py      # Kernel readiness checker with cyclictest integration
+│   └── test_checks.py        # Unit tests for check functions (pytest)
 └── .github/workflows/
-    ├── ci.yml                 # Profile validation, shellcheck, Python lint, quick check
-    └── release.yml            # GHCR Docker publish on v* tags
+    ├── ci.yml                 # Profile validation, shellcheck, pytest, quick check
+    └── release.yml            # Multi-arch GHCR publish + provenance on v* tags
 ```
 
 ---
@@ -222,8 +233,8 @@ ran-kernel-forge/
 git clone https://github.com/gerardrecinto/ran-kernel-forge
 cd ran-kernel-forge
 
-# Lint
-pip install ruff && ruff check tests/
+# Lint and unit tests
+pip install ruff pytest && ruff check tests/ && pytest tests/test_checks.py -v
 sudo apt install shellcheck && shellcheck scripts/*.sh
 
 # Validate profiles
@@ -239,7 +250,7 @@ python3 tests/latency_check.py --quick --json
 ## Use cases
 
 - Pre-flight validation before deploying 5G DU workloads on bare metal or edge nodes
-- O-RAN CU/DU/RU split deployment on Qualcomm, Intel, or COTS x86 platforms  
+- O-RAN CU/DU/RU split deployment on Qualcomm, Intel, or COTS x86/ARM64 platforms
 - CI gate in RAN node provisioning pipelines (Ansible, Terraform, Helm)
 - MWC demo: reproduce standard DU kernel tuning from cold node in under 5 minutes
 - Lab setup validation before handing over to RF/L1 integration teams
