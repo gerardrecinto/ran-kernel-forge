@@ -47,8 +47,9 @@ jobs:
 
       - name: Lint and unit tests
         run: |
-          pip install ruff pytest
+          pip install ruff==0.15.20 pytest==9.0.3 bandit==1.9.4
           ruff check tests/
+          bandit -r tests/ -ll
           pytest tests/test_checks.py -v
 
       - name: Run latency check (quick — checks expected to fail on non-RT runner)
