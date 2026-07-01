@@ -44,15 +44,17 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
+          cache-dependency-path: requirements-dev.txt
 
       - name: Lint and unit tests
         run: |
-          pip install ruff==0.15.20 pytest==9.0.3 bandit==1.9.4
+          pip install -r requirements-dev.txt
           ruff check tests/
           bandit -r tests/ -ll
           pytest tests/test_checks.py -v
 
       - name: Run latency check (quick — checks expected to fail on non-RT runner)
+        continue-on-error: true
         run: python3 tests/latency_check.py --quick --json | python3 -m json.tool
 
   build:

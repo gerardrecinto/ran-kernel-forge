@@ -234,7 +234,7 @@ git clone https://github.com/gerardrecinto/ran-kernel-forge
 cd ran-kernel-forge
 
 # Lint, SAST, and unit tests
-pip install ruff==0.15.20 pytest==9.0.3 bandit==1.9.4
+pip install -r requirements-dev.txt
 ruff check tests/ && bandit -r tests/ -ll && pytest tests/test_checks.py -v
 sudo apt install shellcheck && shellcheck scripts/*.sh
 
