@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Kernel readiness checker for 5G RAN workloads."""
-import os
 import sys
 import argparse
 import subprocess
@@ -89,7 +88,7 @@ def main():
         ("cpu_governor", "CPU governor = performance",          check_cpu_governor()),
     ]
 
-    results = {k: {"label": l, "pass": p} for k, l, p in checks}
+    results = {key: {"label": label, "pass": passed} for key, label, passed in checks}
 
     if not args.quick:
         ct = run_cyclictest(duration_s=5)

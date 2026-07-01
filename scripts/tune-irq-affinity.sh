@@ -8,7 +8,7 @@ HOUSEKEEPING_CPUS="${1:-0}"
 NIC_PREFIX="${2:-}"
 
 AFFINITY_MASK=$(python3 -c "
-cpus = [int(c) for c in '${HOUSEKEEPING_CPUS}'.split(',')
+cpus = [int(c) for c in '${HOUSEKEEPING_CPUS}'.split(',')]
 mask = sum(1 << c for c in cpus)
 print(hex(mask))
 ")
@@ -27,8 +27,9 @@ if [[ -n "${NIC_PREFIX}" ]]; then
     echo "Setting ${NIC_PREFIX} NIC IRQ affinity..."
     while IFS= read -r irq; do
         [[ -z "${irq}" ]] && continue
-        echo "${AFFINITY_MASK}" > "/proc/irq/${irq}/smp_affinity" 2>/dev/null && \
-            echo "  IRQ ${irq} -> ${AFFINITY_MASK}" || true
+        if echo "${AFFINITY_MASK}" > "/proc/irq/${irq}/smp_affinity" 2>/dev/null; then
+            echo "  IRQ ${irq} -> ${AFFINITY_MASK}"
+        fi
     done < <(grep -i "${NIC_PREFIX}" /proc/interrupts | awk '{print $1}' | tr -d ':')
 fi
 
