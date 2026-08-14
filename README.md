@@ -15,7 +15,7 @@ Linux kernel profiles and validation containers for 5G/6G RAN workloads. Covers 
 
 ## Why this exists
 
-5G DU deployments on COTS hardware fail silently when the kernel isn't tuned. Wrong CPU governor, missing `isolcpus`, no hugepages for DPDK — the radio stack starts, processes a few frames, then degrades. The failure shows up as dropped frames and timing violations in the fronthaul, not as a crash.
+5G DU deployments on COTS hardware fail silently when the kernel isn't tuned. Wrong CPU governor, missing `isolcpus`, no hugepages for DPDK: the radio stack starts, processes a few frames, then degrades. The failure shows up as dropped frames and timing violations in the fronthaul, not as a crash.
 
 `ran-kernel-forge` treats kernel readiness like a preflight checklist:
 
@@ -32,7 +32,7 @@ The profiles are reference implementations for O-RAN.WG4 fronthaul scenarios and
 
 ![Demo](docs/assets/demo.svg)
 
-Quick mode (config checks, no hardware needed — runs in CI):
+Quick mode (config checks, no hardware needed: runs in CI):
 
 ```bash
 $ docker run --privileged --pid=host \
@@ -72,7 +72,7 @@ python3 tests/latency_check.py --quick --json | jq '.passed, .total'
 
 ## Business impact
 
-5G DU deployments on COTS x86 hardware fail silently when the kernel isn't tuned — wrong governor, missing isolcpus, no hugepages. ran-kernel-forge provides per-node-type kernel config fragments (DU/CU/RU) and a validation container that runs in CI and on the target node before workload scheduling. Catches tuning gaps before the radio stack starts, not after. Built for O-RAN 7.2x fronthaul scenarios where scheduling jitter above 100us causes dropped frames.
+5G DU deployments on COTS x86 hardware fail silently when the kernel isn't tuned: wrong governor, missing isolcpus, no hugepages. ran-kernel-forge provides per-node-type kernel config fragments (DU/CU/RU) and a validation container that runs in CI and on the target node before workload scheduling. Catches tuning gaps before the radio stack starts, not after. Built for O-RAN 7.2x fronthaul scenarios where scheduling jitter above 100us causes dropped frames.
 
 ---
 
@@ -262,7 +262,7 @@ python3 tests/latency_check.py --quick --json
 
 Distributions ship general-purpose RT kernels. RAN workloads need node-type-specific tuning: a DU needs different isolcpus and hugepage sizing than a CU, and an RU needs PTP + TSN that neither the DU nor CU profile enables. This repo gives you composable config fragments per role, not one monolithic RT config.
 
-The validator is also deployable in CI — you don't need a tuned node to catch a misconfigured kernel profile during development.
+The validator is also deployable in CI: you don't need a tuned node to catch a misconfigured kernel profile during development.
 
 ---
 
