@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ran-kernel-forge: is the node RAN-ready</title>
+<meta name="description" content="Run the real kernel readiness checks against a simulated node and compare the DU, CU and RU kernel profiles, all in your browser.">
+<meta property="og:title" content="ran-kernel-forge">
+<meta property="og:description" content="Run the real kernel readiness checks against a simulated node and compare the DU, CU and RU kernel profiles, all in your browser.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314b8a6'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+
+:root{--bg:#f8fafc;--panel:#fff;--panel2:#f1f5f9;--line:#e2e8f0;--fg:#0f172a;--mute:#475569;--brand:#0f766e;--brand-bg:#ccfbf1;--ok:#047857;--ok-bg:#d1fae5;--err:#b91c1c;--err-bg:#fee2e2;--code:#0b1220;--code-fg:#e2e8f0}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#070d1a;--panel:#0d1526;--panel2:#111c33;--line:#1e2b47;--fg:#e8eefc;--mute:#9fb0cc;--brand:#2dd4bf;--brand-bg:#062f2b;--ok:#34d399;--ok-bg:#06382b;--err:#fca5a5;--err-bg:#3b1212}}
+:root[data-theme=dark]{--bg:#070d1a;--panel:#0d1526;--panel2:#111c33;--line:#1e2b47;--fg:#e8eefc;--mute:#9fb0cc;--brand:#2dd4bf;--brand-bg:#062f2b;--ok:#34d399;--ok-bg:#06382b;--err:#fca5a5;--err-bg:#3b1212}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--brand)}
+code,pre,textarea,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--fg);text-decoration:none}
+.logo i{width:22px;height:22px;border-radius:6px;background:#14b8a6;display:inline-block}
+nav .links{display:flex;gap:18px;align-items:center;font-size:14px}
+nav .links a{color:var(--mute);text-decoration:none}
+nav .links a:hover{color:var(--fg)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--fg);background:var(--panel);cursor:pointer;font-size:15px}
+.btn.primary{background:#14b8a6;border-color:#14b8a6;color:#04211e}
+.btn.primary:hover{background:#2dd4bf}
+.btn:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #14b8a6;outline-offset:2px}
+.hero{padding:72px 0 40px;text-align:center}
+.pill{display:inline-block;font-size:13px;color:var(--brand);background:var(--brand-bg);padding:4px 12px;border-radius:99px;margin-bottom:20px;font-weight:600}
+h1{font-size:clamp(34px,6vw,58px);line-height:1.08;margin:0 0 18px;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--brand)}
+.lede{max-width:700px;margin:0 auto 28px;color:var(--mute);font-size:18px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.stats{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:36px;color:var(--mute);font-size:14px}
+.stats b{display:block;color:var(--fg);font-size:22px}
+section{padding:56px 0}
+h2{font-size:clamp(26px,4vw,36px);margin:0 0 8px;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:0 0 28px;max-width:720px}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.lab{grid-template-columns:minmax(0,1fr)}nav .links .hide-s{display:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}
+.card h3{margin:0;padding:12px 16px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 12px system-ui;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;text-transform:none;letter-spacing:0}
+.chip[aria-pressed=true]{background:var(--brand-bg);border-color:var(--brand);color:var(--brand)}
+#log{display:block;width:100%;height:420px;border:0;padding:12px 14px;font-size:12.5px;line-height:1.55;background:var(--code);color:var(--code-fg);resize:vertical;white-space:pre;overflow:auto}
+.src{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--mute);flex-wrap:wrap}
+.out{min-height:420px}
+.status{padding:16px;color:var(--mute);font-size:14px}
+.verdict{padding:18px 16px;border-bottom:1px solid var(--line);background:var(--err-bg)}
+.verdict.unknown{background:var(--panel2)}
+.verdict b{display:block;font-size:20px;text-transform:uppercase;letter-spacing:.04em;color:var(--err)}
+.verdict.unknown b{color:var(--mute)}
+.verdict span{font-size:14px;color:var(--mute)}
+.sec{padding:14px 16px;border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec h4{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.bar{height:10px;border-radius:99px;background:var(--panel2);overflow:hidden;max-width:260px;display:inline-block;vertical-align:middle;margin-right:10px;width:60%}
+.bar i{display:block;height:100%;background:#14b8a6}
+.site{padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.site:last-child{border:0}
+.site code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-size:12px}
+.fix{background:var(--ok-bg);color:var(--ok);padding:10px 12px;border-radius:8px;font-size:14px}
+.note{font-size:13px;color:var(--mute);margin-top:12px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:860px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.step .n{width:28px;height:28px;border-radius:8px;background:var(--brand-bg);color:var(--brand);display:grid;place-items:center;font-weight:700;margin-bottom:10px}
+.step h3{margin:0 0 6px;font-size:17px}
+.step p{margin:0;color:var(--mute);font-size:15px}
+.tw{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow-x:auto;max-width:100%}
+table{width:100%;min-width:560px;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-family:ui-monospace,monospace;font-weight:700;white-space:nowrap}
+.install pre{background:var(--code);color:var(--code-fg);padding:16px;border-radius:12px;overflow-x:auto;font-size:13.5px;margin:0 0 12px}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.cols2{grid-template-columns:minmax(0,1fr)}}
+.limits{background:var(--panel);border:1px solid var(--line);border-left:4px solid #f59e0b;border-radius:10px;padding:16px 20px}
+.limits ul{margin:8px 0 0;padding-left:20px;color:var(--mute)}
+footer{border-top:1px solid var(--line);padding:32px 0;color:var(--mute);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.form{display:grid;gap:0}
+.form .row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.form .row label{color:var(--mute)}
+@media (max-width:480px){.form .row{grid-template-columns:1fr}}
+.form input[type=text],.form input[type=number],.form select,.form textarea{width:100%;background:var(--code);color:var(--code-fg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:12.5px ui-monospace,monospace}
+.form textarea{height:62px;resize:vertical}
+.chk{display:flex;gap:8px;align-items:center}
+.sim{display:inline-block;font:700 11px ui-monospace,monospace;color:var(--brand);background:var(--brand-bg);padding:2px 8px;border-radius:6px;margin-left:8px;letter-spacing:0;text-transform:none}
+.ck{display:flex;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);font-size:14px}
+.ck:last-child{border:0}
+.pf{font:700 11px ui-monospace,monospace;padding:2px 8px;border-radius:6px;min-width:46px;text-align:center}
+.pf.p{background:var(--ok-bg);color:var(--ok)} .pf.f{background:var(--err-bg);color:var(--err)}
+.score{padding:16px;font-size:20px;font-weight:700;border-bottom:1px solid var(--line)}
+.pick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+td.v{font-family:ui-monospace,monospace;font-size:12.5px;white-space:nowrap}
+td.diff{background:var(--brand-bg)}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#top"><i></i>ran-kernel-forge</a>
+  <div class="links"><a href="#try" class="hide-s">Try it</a><a href="#install" class="hide-s">Install</a><a class="btn" href="https://github.com/gerardrecinto/ran-kernel-forge">GitHub</a></div>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <h1>A RAN node that is not tuned fails <em>silently</em>.</h1>
+  <p class="lede">Linux kernel profiles and a validation checklist for 5G and 6G RAN workloads. Wrong governor, no isolated CPUs or no hugepages shows up as dropped frames, not a crash. This page runs the real checks.</p>
+  <div class="cta"><a class="btn primary" href="#try">Check a node</a><a class="btn" href="#install">Run it</a></div>
+  <div class="stats"><div><b>3</b>node profiles: DU, CU, RU</div><div><b>5</b>config checks plus a latency gate</div><div><b>0</b>kernels built here</div></div>
+</div></header>
+
+
+<section id="try"><div class="wrap">
+  <h2>Is this node RAN-ready?</h2>
+  <p class="sub">Describe a node, then run the repo's real readiness checks against it. The node here is simulated: the page writes the files and command output the checks read, then runs <code>tests/latency_check.py</code> unmodified in your browser.</p>
+  <div class="lab">
+    <div class="card form">
+      <h3><span>Node state <span class="sim">SIMULATED</span></span><span class="tools"><button class="chip" id="p-bad" aria-pressed="true">Untuned box</button><button class="chip" id="p-good" aria-pressed="false">Tuned DU</button></span></h3>
+      <div class="row"><label for="uname">uname -v</label><input id="uname" type="text"></div>
+      <div class="row"><label for="cmd">/proc/cmdline</label><textarea id="cmd" spellcheck="false"></textarea></div>
+      <div class="row"><label for="hp">HugePages_Total</label><input id="hp" type="number" min="0"></div>
+      <div class="row"><label for="gov">CPU governor</label><select id="gov"><option>performance</option><option>powersave</option><option>schedutil</option><option>ondemand</option></select></div>
+      <div class="row"><label for="irq">irqbalance</label><label class="chk"><input id="irq" type="checkbox"> running</label></div>
+      <div class="row"><label for="ct">cyclictest max us</label><input id="ct" type="number" min="0" placeholder="blank to skip"></div>
+    </div>
+    <div class="card" id="rep" aria-live="polite"><h3><span>Readiness</span></h3><div class="status" id="boot">Loading the checker (about 10 MB the first time, cached after)...</div></div>
+  </div>
+  <p class="note">The checks read <code>/proc</code>, <code>/sys</code> and a few commands. Here those reads hit a fake filesystem, so the result says nothing about your own machine.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Three node profiles</h2>
+  <p class="sub">Kernel config fragments for the distributed unit, central unit and radio unit. The table is read from the profile files at deploy time. Highlighted cells differ between profiles.</p>
+  <div class="pick" id="pf-pick" role="group" aria-label="Profile filter"><button class="chip" data-f="all" aria-pressed="true">All options</button><button class="chip" data-f="diff" aria-pressed="false">Only differences</button></div>
+  <div class="tw" style="max-height:480px;overflow:auto"><table><thead><tr><th>Option</th><th>du</th><th>cu</th><th>ru</th></tr></thead><tbody id="cfg"><tr><td colspan="4">Loading...</td></tr></tbody></table></div>
+  <p class="note" id="cfg-n"></p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>How it works</h2>
+  <p class="sub">Treat kernel readiness as a preflight checklist, not a post-incident discovery.</p>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Profile per node type</h3><p>Config fragments for DU, CU and RU merge into any existing kernel config with one script. DU and RU target a real-time kernel.</p></div>
+    <div class="step"><div class="n">2</div><h3>Tune the host</h3><p>Scripts set hugepages, IRQ affinity and CPU isolation so the RAN stack gets cores the scheduler leaves alone.</p></div>
+    <div class="step"><div class="n">3</div><h3>Check before scheduling</h3><p>A validator container fails fast in CI or on the node. Quick mode checks config only. Full mode adds a cyclictest latency gate.</p></div>
+  </div>
+</div></section>
+
+<section id="install" class="install"><div class="wrap">
+  <h2>Run it</h2>
+  <p class="sub">Linux on x86_64 or arm64. Full mode needs rt-tests and root.</p>
+  <div class="cols2">
+    <div>
+<pre>python3 tests/latency_check.py --quick
+python3 tests/latency_check.py --max-latency-us 50
+python3 tests/latency_check.py --quick --json</pre>
+    </div>
+    <div>
+<pre>scripts/apply-profile.sh profiles/du-profile.config &lt;kernel-src&gt;
+scripts/tune-hugepages.sh
+scripts/tune-cpu-isolation.sh</pre>
+      <p class="note">The README also lists validation container images for DU, CU and RU.</p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="limits"><strong>What this does not do</strong><ul>
+    <li>It does not build or boot a kernel. The profiles are config fragments, reference quality, validated by the author on the kernel versions named in each file.</li>
+    <li>The checks are presence checks. They confirm a setting exists, not that it is right for your hardware.</li>
+    <li>The latency gate in this page takes a number you type. Only a real cyclictest run on the node measures jitter.</li>
+  </ul></div>
+</div></section>
+
+
+<footer><div class="wrap">
+  <span>ran-kernel-forge. MIT licensed. Built by <a href="https://github.com/gerardrecinto">Gerard Recinto</a>.</span>
+  <span><a href="https://github.com/gerardrecinto/ran-kernel-forge">Source</a> &middot; <a href="https://github.com/gerardrecinto/ran-kernel-forge/releases">Releases</a></span>
+</div></footer>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const track = (n) => { try { if (window.plausible) window.plausible(n); } catch (e) {} };
+  const PRESETS = {
+    bad: { uname: "#1 SMP PREEMPT_DYNAMIC Tue Jan 9 10:00:00 UTC 2026", cmd: "BOOT_IMAGE=/vmlinuz root=/dev/sda2 ro quiet", hp: 0, gov: "powersave", irq: true, ct: "" },
+    good: { uname: "#1 SMP PREEMPT_RT Tue Jan 9 10:00:00 UTC 2026", cmd: "BOOT_IMAGE=/vmlinuz root=/dev/sda2 ro isolcpus=2-9 nohz_full=2-9 rcu_nocbs=2-9 hugepagesz=1G hugepages=8 intel_iommu=on", hp: 8, gov: "performance", irq: false, ct: 38 },
+  };
+  let py = null, timer = null;
+  const PY = `
+import json, sys, io, types, subprocess as _sp, importlib, contextlib
+from pathlib import Path
+sys.path.insert(0, "/lib")
+import latency_check as L
+STATE = {}
+def _w(p, t):
+    p = Path(p); p.parent.mkdir(parents=True, exist_ok=True); p.write_text(t)
+class Fake:
+    TimeoutExpired = _sp.TimeoutExpired
+    @staticmethod
+    def check_output(cmd, text=True, **k):
+        return STATE["uname"]
+    @staticmethod
+    def run(cmd, capture_output=True, text=True, timeout=None, **k):
+        if cmd[0] == "systemctl":
+            return types.SimpleNamespace(stdout=("active\\n" if STATE["irq"] else "inactive\\n"), returncode=0)
+        if cmd[0] == "cyclictest":
+            if STATE["ct"] in ("", None):
+                raise FileNotFoundError("cyclictest")
+            return types.SimpleNamespace(stdout=json.dumps({"statistics": [{"max": int(STATE["ct"])}]}), returncode=0)
+        raise FileNotFoundError(cmd[0])
+L.subprocess = Fake
+def run(uname, cmd, hp, gov, irq, ct):
+    STATE.update(uname=uname, irq=bool(irq), ct=ct)
+    _w("/proc/cmdline", cmd)
+    _w("/proc/meminfo", "MemTotal: 65536000 kB\\nHugePages_Total: %d\\nHugePages_Free: %d\\n" % (int(hp or 0), int(hp or 0)))
+    for p in Path("/sys/devices/system/cpu").glob("cpu[0-9]*"):
+        pass
+    _w("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", gov)
+    _w("/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor", gov)
+    out = io.StringIO()
+    sys.argv = ["latency_check.py", "--json", "--max-latency-us", "50"] + ([] if ct not in ("", None) else ["--quick"])
+    code = 0
+    with contextlib.redirect_stdout(out):
+        try: L.main()
+        except SystemExit as e: code = e.code or 0
+    r = json.loads(out.getvalue())
+    r["exit"] = code
+    return json.dumps(r)
+`;
+  function render(r) {
+    if (r.error) { $("rep").innerHTML = '<h3><span>Readiness</span></h3><div class="status" style="color:var(--err)">' + esc(r.error) + "</div>"; return; }
+    $("rep").innerHTML = `<h3><span>Readiness</span><span class="sim">REAL CHECK CODE</span></h3><div class="score">${r.passed}/${r.total} checks passed <span style="font-weight:400;font-size:14px;color:var(--mute)">exit code ${r.exit}</span></div>` +
+      Object.values(r.results).map((c) => `<div class="ck"><span class="pf ${c.pass ? "p" : "f"}">${c.pass ? "PASS" : "FAIL"}</span><span>${esc(c.label)}${c.value_us != null ? ` (${c.value_us} us)` : ""}</span></div>`).join("");
+  }
+  function run() {
+    if (!py) return; let r;
+    try {
+      const a = ["uname", "cmd", "hp", "gov", "irq", "ct"];
+      py.globals.set("_a", [$("uname").value, $("cmd").value, parseInt($("hp").value || "0", 10), $("gov").value, $("irq").checked, $("ct").value === "" ? "" : parseInt($("ct").value, 10)]);
+      r = JSON.parse(py.runPython("run(*_a)"));
+    } catch (e) { r = { error: String(e.message || e).trim().split("\n").pop() }; }
+    render(r);
+  }
+  function setP(k) {
+    const s = PRESETS[k]; $("uname").value = s.uname; $("cmd").value = s.cmd; $("hp").value = s.hp; $("gov").value = s.gov; $("irq").checked = s.irq; $("ct").value = s.ct;
+    $("p-bad").setAttribute("aria-pressed", k === "bad"); $("p-good").setAttribute("aria-pressed", k === "good"); run(); track("kf_" + k);
+  }
+  $("p-bad").addEventListener("click", () => setP("bad")); $("p-good").addEventListener("click", () => setP("good"));
+  ["uname", "cmd", "hp", "gov", "irq", "ct"].forEach((id) => $(id).addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 250); }));
+  $("gov").addEventListener("change", run); $("irq").addEventListener("change", run);
+
+  const NAMES = ["du", "cu", "ru"]; let prof = null, filter = "all";
+  function parse(t) { const m = {}; t.split("\n").forEach((l) => { l = l.trim(); let x = l.match(/^(CONFIG_[A-Z0-9_]+)=(.+)$/); if (x) m[x[1]] = x[2]; else if ((x = l.match(/^# (CONFIG_[A-Z0-9_]+) is not set$/))) m[x[1]] = "unset"; }); return m; }
+  function drawCfg() {
+    if (!prof) return; const keys = [...new Set(NAMES.flatMap((n) => Object.keys(prof[n])))].sort();
+    const rows = keys.map((k) => { const v = NAMES.map((n) => prof[n][k] || ""); const diff = new Set(v).size > 1; return { k, v, diff }; }).filter((r) => filter === "all" || r.diff);
+    $("cfg").innerHTML = rows.map((r) => `<tr><td style="font-size:12.5px">${esc(r.k)}</td>${r.v.map((x) => `<td class="v ${r.diff ? "diff" : ""}">${esc(x || "-")}</td>`).join("")}</tr>`).join("");
+    $("cfg-n").textContent = rows.length + " options shown across " + keys.length + " total.";
+  }
+  document.querySelectorAll("#pf-pick [data-f]").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; document.querySelectorAll("#pf-pick .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); drawCfg(); }));
+  Promise.all(NAMES.map((n) => fetch("profiles/" + n + "-profile.config").then((r) => r.text()))).then((t) => { prof = {}; NAMES.forEach((n, i) => (prof[n] = parse(t[i]))); drawCfg(); }).catch(() => { $("cfg").innerHTML = '<tr><td colspan="4">The profiles did not load.</td></tr>'; });
+
+  (async () => {
+    try {
+      py = await loadPyodide(); py.FS.mkdirTree("/lib");
+      const r = await fetch("py/latency_check.py"); if (!r.ok) throw new Error("could not load latency_check.py");
+      py.FS.writeFile("/lib/latency_check.py", await r.text());
+      py.runPython(PY); window.__KF_READY__ = true; setP("bad");
+    } catch (e) { $("boot").textContent = "The in-browser checker did not load (" + String(e.message || e).split("\n").pop() + ")."; }
+  })();
+})();
+
+</script>
+</body>
+</html>
